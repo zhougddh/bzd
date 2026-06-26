@@ -115,19 +115,16 @@ const server = http.createServer((req, res) => {
 // 静态文件服务
 // ============================================================
 function serveStaticFile(req, res, pathname) {
-    // 默认首页
     if (pathname === '/') {
-        pathname = '/6a3e9e133f5e95444ec997a2_index(1).html';
+        pathname = '/index.html';
     }
     
-    // 司机端路由
     if (pathname === '/driver' || pathname === '/driver.html') {
-        pathname = '/6a3e9e133f5e95444ec997a2_driver(1).html';
+        pathname = '/driver.html';
     }
     
-    // 司机端登录路由
     if (pathname === '/driver/login' || pathname === '/driver/login.html') {
-        pathname = '/6a3e9e133f5e95444ec997a2_driver_login.html';
+        pathname = '/driver_login.html';
     }
     
     const filePath = path.join(__dirname, pathname);

@@ -392,9 +392,11 @@
     </div>
     
     <script>
+    const PROTOCOL = window.location.protocol;
+    const HOST = window.location.host;
     const CONFIG = {
-        WS_URL: 'ws://localhost:3000',
-        API_URL: 'http://localhost:3000',
+        WS_URL: (PROTOCOL === 'https:' ? 'wss://' : 'ws://') + HOST,
+        API_URL: PROTOCOL + '//' + HOST,
         REPORT_INTERVAL: 3000,
         ENABLE_HIGH_ACCURACY: true,
         MAX_AGE: 0
