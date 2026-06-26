@@ -237,11 +237,13 @@
 
 <script>
 // ============================================================
+const PROTOCOL = window.location.protocol;
+const HOST = window.location.host;
+
 // 配置
 // ============================================================
 const CONFIG = {
-    // 后端WebSocket地址（部署时改为实际服务器地址）
-    WS_URL: 'ws://localhost:3000',
+    WS_URL: (PROTOCOL === 'https:' ? 'wss://' : 'ws://') + HOST,
     // 司机信息
     DRIVER: {
         id: 'yubaohua',

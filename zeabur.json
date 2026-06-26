@@ -1,0 +1,23 @@
+{
+  "project": {
+    "name": "zixi-logistics"
+  },
+  "services": {
+    "zixi-logistics": {
+      "name": "zixi-logistics",
+      "source": {
+        "type": "github",
+        "repo": "zhougddh/bzd",
+        "branch": "main"
+      },
+      "build": {
+        "command": "npm install",
+        "output": "."
+      },
+      "run": {
+        "command": "npm start",
+        "port": 3000
+      }
+    }
+  }
+}
