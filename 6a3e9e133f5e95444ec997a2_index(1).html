@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深圳子熙物流管理有限公司 - 调度管理后台</title>
+    <!-- 高德地图 JS API 2.0 -->
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: '5c58fb127f2c54711b83fbaaf6aadf50',
+        }
+    </script>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=2c67dd3d758c27b3fbfbd240cc3c1221&plugin=AMap.Geolocation"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        /* 顶部导航 */
+        .topbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .logo-sub {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .topbar-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+        .topbar-item:hover { opacity: 1; }
+        
+        /* 左侧菜单 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 64px;
+            bottom: 0;
+            width: 200px;
+            background: #fff;
+            border-right: 1px solid #e8e8e8;
+            overflow-y: auto;
+        }
+        .menu-group {
+            padding: 16px 0;
+        }
+        .menu-title {
+            padding: 0 20px 8px;
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .menu-item:hover {
+            background: #f5f5f5;
+            color: #667eea;
+        }
+        .menu-item.active {
+            background: #f0f2ff;
+            color: #667eea;
+            border-left-color: #667eea;
+        }
+        .menu-icon { font-size: 18px; width: 24px; text-align: center; }
+        .menu-text { font-size: 14px; }
+        
+        /* 主内容区 */
+        .main-content {
+            margin-left: 200px;
+            padding: 24px;
+            min-height: calc(100vh - 64px);
+        }
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #999;
+        }
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .stat-icon.blue { background: #e3f2fd; }
+        .stat-icon.orange { background: #fff3e0; }
+        .stat-icon.green { background: #e8f5e9; }
+        .stat-icon.purple { background: #f3e5f5; }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .stat-change {
+            font-size: 12px;
+            color: #52c41a;
+        }
+        .stat-change.down { color: #ff4d4f; }
+        
+        /* 内容卡片 */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn:hover { border-color: #667eea; color: #667eea; }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+        }
+        .btn-primary:hover { opacity: 0.9; color: #fff; }
+        .btn-success {
+            background: #52c41a;
+            color: #fff;
+            border: none;
+        }
+        .btn-success:hover { opacity: 0.9; color: #fff; }
+        .btn-danger {
+            background: #ff4d4f;
+            color: #fff;
+            border: none;
+        }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        
+        /* 表格 */
+        .table-container {
+            padding: 0 20px 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        th {
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+            background: #fafafa;
+        }
+        td { font-size: 13px; }
+        tr:hover td { background: #fafafa; }
+        
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .tag-pending { background: #fff7e6; color: #d46b08; }
+        .tag-delivering { background: #e6f7ff; color: #096dd9; }
+        .tag-done { background: #f6ffed; color: #389e0d; }
+        .tag-cancel { background: #fff1f0; color: #cf1322; }
+        
+        /* 司机状态 */
+        .driver-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .status-online { background: #52c41a; }
+        .status-offline { background: #999; }
+        .status-busy { background: #faad14; }
+        
+        /* 表单 */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #667eea;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        /* 弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* 地图容器 */
+        .map-container {
+            height: 300px;
+            background: #e8e8e8;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        #dashboardMap, #trackingMap {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 定位信息面板 */
+        .location-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            z-index: 10;
+            font-size: 13px;
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .location-info h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .driver-loc-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+        .driver-loc-item:last-child { border-bottom: none; }
+        .driver-loc-item:hover { color: #667eea; }
+        .driver-loc-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .driver-loc-name {
+            font-weight: 500;
+        }
+        .driver-loc-addr {
+            font-size: 11px;
+            color: #999;
+        }
+        .driver-loc-time {
+            font-size: 10px;
+            color: #bbb;
+        }
+        
+        /* 连接状态 */
+        .ws-status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ws-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .ws-connected { background: #52c41a; }
+        .ws-disconnected { background: #ff4d4f; }
+        .ws-connecting { background: #faad14; animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+        
+        /* 隐藏/显示 */
+        .hidden { display: none !important; }
+        
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部 -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="logo-icon">🚚</div>
+            <div>
+                <div class="logo-text">深圳子熙物流管理有限公司</div>
+                <div class="logo-sub">TMS调度管理系统</div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-item">📅 <span id="todayDate"></span></div>
+            <div class="topbar-item">👤 管理员</div>
+            <div class="topbar-item" onclick="logout()">🚪 退出</div>
+        </div>
+    </div>
+    
+    <!-- 左侧菜单 -->
+    <div class="sidebar">
+        <div class="menu-group">
+            <div class="menu-title">工作台</div>
+            <div class="menu-item active" onclick="switchPage('dashboard', this)">
+                <span class="menu-icon">📊</span>
+                <span class="menu-text">数据看板</span>
+            </div>
+            <div class="menu-item" onclick="switchPage('orders', this)">
+                <span class="menu-icon">📋</span>
+                <span class="menu-text">订单管理</span>
+            </div>
+            <div class="menu-item" onclick="switchPage('dispatch', this)">
+                <span class="menu-icon">🚛</span>
+                <span class="menu-text">调度派单</span>
+            </div>
+        </div>
+        <div class="menu-group">
+            <div class="menu-title">资源管理</div>
+            <div class="menu-item" onclick="switchPage('drivers', this)">
+                <span class="menu-icon">👨‍💼</span>
+                <span class="menu-text">司机管理</span>
+            </div>
+            <div class="menu-item" onclick="switchPage('vehicles', this)">
+                <span class="menu-icon">🚗</span>
+                <span class="menu-text">车辆管理</span>
+            </div>
+        </div>
+        <div class="menu-group">
+            <div class="menu-title">监控</div>
+            <div class="menu-item" onclick="switchPage('tracking', this)">
+                <span class="menu-icon">📍</span>
+                <span class="menu-text">车辆定位</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主内容 -->
+    <div class="main-content">
+        <!-- 数据看板 -->
+        <div id="page-dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">今日订单</span>
+                        <div class="stat-icon blue">📦</div>
+                    </div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-change">↑ 较昨日 +3</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">待配送</span>
+                        <div class="stat-icon orange">⏳</div>
+                    </div>
+                    <div class="stat-value">5</div>
+                    <div class="stat-change">↑ 较昨日 +2</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">配送中</span>
+                        <div class="stat-icon green">🚛</div>
+                    </div>
+                    <div class="stat-value">4</div>
+                    <div class="stat-change">↑ 较昨日 +1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">已完成</span>
+                        <div class="stat-icon purple">✅</div>
+                    </div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-change down">↓ 较昨日 -1</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📍 司机实时位置</span>
+                    <div class="card-actions">
+                        <span id="onlineCount" style="font-size:12px;color:#999;">在线司机：0</span>
+                    </div>
+                </div>
+                <div class="map-container" style="height: 400px;">
+                    <div id="dashboardMap"></div>
+                    <!-- 司机位置信息面板 -->
+                    <div class="location-info" id="locationPanel">
+                        <h4>在线司机</h4>
+                        <div id="driverLocList">
+                            <div style="color:#999;font-size:12px;">暂无在线司机</div>
+                        </div>
+                    </div>
+                    <!-- WebSocket连接状态 -->
+                    <div class="ws-status">
+                        <span class="ws-dot ws-connecting" id="wsDot"></span>
+                        <span id="wsText">正在连接定位服务...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 订单管理 -->
+        <div id="page-orders" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📋 订单列表</span>
+                    <div class="card-actions">
+                        <button class="btn" onclick="filterOrders('all')">全部</button>
+                        <button class="btn" onclick="filterOrders('pending')">待配送</button>
+                        <button class="btn" onclick="filterOrders('delivering')">配送中</button>
+                        <button class="btn" onclick="filterOrders('done')">已完成</button>
+                        <button class="btn btn-primary" onclick="showCreateOrder()">➕ 新建订单</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>货物信息</th>
+                                <th>发货地址</th>
+                                <th>收货地址</th>
+                                <th>司机</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                            <tr>
+                                <td>YD20260626001</td>
+                                <td>电子配件 / 35kg</td>
+                                <td>龙岗区甘坑同富裕工业区26号</td>
+                                <td>福田区华强北赛格广场</td>
+                                <td>于保华</td>
+                                <td><span class="tag tag-delivering">配送中</span></td>
+                                <td>2026-06-26 09:30</td>
+                                <td>
+                                    <button class="btn btn-sm" onclick="viewOrder('YD20260626001')">查看</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>YD20260626002</td>
+                                <td>办公用品 / 12kg</td>
+                                <td>龙岗区甘坑同富裕工业区26号</td>
+                                <td>南山区科技园科兴科学园</td>
+                                <td>于保华</td>
+                                <td><span class="tag tag-pending">待配送</span></td>
+                                <td>2026-06-26 10:15</td>
+                                <td>
+                                    <button class="btn btn-sm" onclick="viewOrder('YD20260626002')">查看</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>YD20260626003</td>
+                                <td>服装 / 8kg</td>
+                                <td>龙岗区甘坑同富裕工业区26号</td>
+                                <td>宝安区西乡固戍</td>
+                                <td>-</td>
+                                <td><span class="tag tag-pending">待配送</span></td>
+                                <td>2026-06-26 11:00</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="dispatchOrder('YD20260626003')">派单</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 调度派单 -->
+        <div id="page-dispatch" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🚛 调度派单</span>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>选择订单 *</label>
+                            <select id="dispatchOrder">
+                                <option value="">请选择待派单订单</option>
+                                <option value="YD20260626003">YD20260626003 - 服装/8kg - 宝安西乡</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>选择司机 *</label>
+                            <select id="dispatchDriver">
+                                <option value="">请选择司机</option>
+                                <option value="于保华">于保华 (在线)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>预计出发时间</label>
+                            <input type="datetime-local" id="dispatchTime">
+                        </div>
+                        <div class="form-group">
+                            <label>优先级</label>
+                            <select id="dispatchPriority">
+                                <option value="normal">普通</option>
+                                <option value="urgent">加急</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>备注</label>
+                            <textarea id="dispatchRemark" placeholder="输入派单备注..."></textarea>
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button class="btn" onclick="switchPage('orders')">取消</button>
+                        <button class="btn btn-primary" onclick="doDispatch()">🚀 确认派单</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 司机管理 -->
+        <div id="page-drivers" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">👨‍💼 司机列表</span>
+                    <button class="btn btn-primary" onclick="showAddDriver()">➕ 添加司机</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>手机号</th>
+                                <th>状态</th>
+                                <th>车辆</th>
+                                <th>当前位置</th>
+                                <th>最后更新</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driverTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 车辆定位 -->
+        <div id="page-tracking" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📍 车辆实时定位</span>
+                    <div class="card-actions">
+                        <button class="btn btn-sm" onclick="fitAllDrivers()">全部居中</button>
+                    </div>
+                </div>
+                <div class="map-container" style="height: 500px;">
+                    <div id="trackingMap"></div>
+                    <div class="location-info" id="trackingLocationPanel">
+                        <h4>在线司机</h4>
+                        <div id="trackingDriverLocList">
+                            <div style="color:#999;font-size:12px;">暂无在线司机</div>
+                        </div>
+                    </div>
+                    <div class="ws-status">
+                        <span class="ws-dot ws-connecting" id="wsDot2"></span>
+                        <span id="wsText2">正在连接定位服务...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 车辆管理 -->
+        <div id="page-vehicles" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🚗 车辆管理</span>
+                    <button class="btn btn-primary">➕ 添加车辆</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>车牌号</th>
+                                <th>车型</th>
+                                <th>载重</th>
+                                <th>司机</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>粤B·12345</td>
+                                <td>厢式货车</td>
+                                <td>2吨</td>
+                                <td>于保华</td>
+                                <td><span class="tag tag-delivering">配送中</span></td>
+                                <td><button class="btn btn-sm">查看</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新建订单弹窗 -->
+    <div class="modal-overlay" id="createOrderModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">➕ 新建配送订单</span>
+                <button class="modal-close" onclick="closeModal('createOrderModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>货物名称 *</label>
+                        <input type="text" id="cargoName" placeholder="请输入货物名称">
+                    </div>
+                    <div class="form-group">
+                        <label>重量/体积</label>
+                        <input type="text" id="cargoWeight" placeholder="如：35kg 或 2立方">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>发货地址 *</label>
+                        <input type="text" id="fromAddr" value="深圳市龙岗区吉华街道甘坑同富裕工业区26号">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>收货地址 *</label>
+                        <input type="text" id="toAddr" placeholder="请输入收货地址">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>收货人</label>
+                        <input type="text" id="toContact" placeholder="收货人姓名">
+                    </div>
+                    <div class="form-group">
+                        <label>联系电话</label>
+                        <input type="text" id="toPhone" placeholder="收货人电话">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>要求送达时间</label>
+                        <input type="datetime-local" id="deadline">
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <input type="text" id="orderRemark" placeholder="订单备注">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('createOrderModal')">取消</button>
+                <button class="btn btn-primary" onclick="createOrder()">✅ 创建订单</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加司机弹窗 -->
+    <div class="modal-overlay" id="addDriverModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">➕ 添加司机账号</span>
+                <button class="modal-close" onclick="closeModal('addDriverModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>姓名 *</label>
+                        <input type="text" id="driverName" placeholder="请输入司机姓名">
+                    </div>
+                    <div class="form-group">
+                        <label>手机号 *</label>
+                        <input type="tel" id="driverPhone" placeholder="请输入手机号">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>初始密码 *</label>
+                        <input type="password" id="driverPassword" placeholder="请设置初始密码">
+                    </div>
+                    <div class="form-group">
+                        <label>车牌号</label>
+                        <input type="text" id="driverVehicleNo" placeholder="如：粤B·12345">
+                    </div>
+                </div>
+                <div style="color:#999;font-size:12px;padding-top:8px;">
+                    提示：司机登录账号为手机号，密码由管理员设置
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('addDriverModal')">取消</button>
+                <button class="btn btn-primary" onclick="addDriver()">✅ 添加司机</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // ============================================================
+    // 配置区 - 请根据实际情况修改
+    // ============================================================
+    const CONFIG = {
+        // 后端WebSocket地址（部署时改为实际服务器地址）
+        WS_URL: 'ws://localhost:3000',
+        // 高德地图Key（请替换为您自己的Key）
+        // 申请地址：https://console.amap.com/dev/key/app
+        AMAP_KEY: '2c67dd3d758c27b3fbfbd240cc3c1221',
+        // 默认地图中心（深圳）
+        DEFAULT_CENTER: [114.0579, 22.5431],
+        // 默认缩放级别
+        DEFAULT_ZOOM: 12
+    };
+
+    // ============================================================
+    // 全局变量
+    // ============================================================
+    let dashboardMap = null;       // 看板地图实例
+    let trackingMap = null;       // 定位页地图实例
+    let driverMarkers = {};       // 司机标记 {driverId: Marker}
+    let driverInfoWindows = {};   // 信息窗口
+    let ws = null;                // WebSocket连接
+    let driverLocations = {};     // 司机位置数据 {driverId: {lat, lng, address, time, name, speed, accuracy}}
+    let geocoder = null;          // 地理编码器
+
+    // ============================================================
+    // 初始化
+    // ============================================================
+    document.getElementById('todayDate').textContent = new Date().toLocaleDateString('zh-CN');
+
+    // 初始化地图
+    function initMaps() {
+        try {
+            // 看板地图
+            dashboardMap = new AMap.Map('dashboardMap', {
+                zoom: CONFIG.DEFAULT_ZOOM,
+                center: CONFIG.DEFAULT_CENTER,
+                mapStyle: 'amap://styles/whitesmoke'
+            });
+            
+            // 定位页地图
+            trackingMap = new AMap.Map('trackingMap', {
+                zoom: CONFIG.DEFAULT_ZOOM,
+                center: CONFIG.DEFAULT_CENTER,
+                mapStyle: 'amap://styles/whitesmoke'
+            });
+            
+            // 地理编码器（用于将经纬度转为地址）
+            geocoder = new AMap.Geocoder({
+                radius: 1000,
+                extensions: 'base'
+            });
+            
+            console.log('高德地图初始化成功');
+        } catch(e) {
+            console.error('高德地图初始化失败，请检查Key是否正确:', e);
+            document.getElementById('dashboardMap').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">地图加载失败，请检查高德Key配置<br><br><small>请将CONFIG.AMAP_KEY替换为您的高德地图Key<br>申请地址：https://console.amap.com/dev/key/app</small></div>';
+            document.getElementById('trackingMap').innerHTML = document.getElementById('dashboardMap').innerHTML;
+        }
+    }
+
+    // ============================================================
+    // WebSocket连接（实时接收司机位置）
+    // ============================================================
+    function connectWebSocket() {
+        updateWsStatus('connecting');
+        
+        try {
+            ws = new WebSocket(CONFIG.WS_URL);
+            
+            ws.onopen = function() {
+                console.log('WebSocket连接成功');
+                updateWsStatus('connected');
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'location') {
+                        // 收到司机位置更新
+                        handleLocationUpdate(data);
+                    } else if (data.type === 'driver_online') {
+                        handleDriverOnline(data);
+                    } else if (data.type === 'driver_offline') {
+                        handleDriverOffline(data);
+                    }
+                } catch(e) {
+                    console.error('解析消息失败:', e);
+                }
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket连接断开，5秒后重连...');
+                updateWsStatus('disconnected');
+                setTimeout(connectWebSocket, 5000);
+            };
+            
+            ws.onerror = function(err) {
+                console.error('WebSocket错误:', err);
+                updateWsStatus('disconnected');
+            };
+        } catch(e) {
+            console.error('WebSocket连接失败:', e);
+            updateWsStatus('disconnected');
+            
+            // 如果WebSocket连接失败，使用模拟数据进行演示
+            console.log('将使用模拟数据进行演示');
+            startDemoMode();
+        }
+    }
+
+    function updateWsStatus(status) {
+        const dots = [document.getElementById('wsDot'), document.getElementById('wsDot2')];
+        const texts = [document.getElementById('wsText'), document.getElementById('wsText2')];
+        
+        dots.forEach(dot => {
+            dot.className = 'ws-dot';
+            if (status === 'connected') dot.classList.add('ws-connected');
+            else if (status === 'disconnected') dot.classList.add('ws-disconnected');
+            else dot.classList.add('ws-connecting');
+        });
+        
+        texts.forEach(text => {
+            if (status === 'connected') text.textContent = '定位服务已连接（实时）';
+            else if (status === 'disconnected') text.textContent = '定位服务未连接 - 使用演示数据';
+            else text.textContent = '正在连接定位服务...';
+        });
+    }
+
+    // ============================================================
+    // 处理司机位置更新
+    // ============================================================
+    function handleLocationUpdate(data) {
+        const { driverId, name, phone, lat, lng, accuracy, speed, address, timestamp } = data;
+        
+        const loc = {
+            lat: parseFloat(lat),
+            lng: parseFloat(lng),
+            accuracy: parseFloat(accuracy) || 0,
+            speed: parseFloat(speed) || 0,
+            address: address || '定位中...',
+            time: timestamp || new Date().toLocaleString('zh-CN'),
+            name: name || '未知司机',
+            phone: phone || ''
+        };
+        
+        driverLocations[driverId] = loc;
+        
+        // 更新地图标记
+        updateDriverMarker(driverId, loc);
+        
+        // 更新司机列表中的位置信息
+        updateDriverRow(driverId, loc);
+        
+        // 更新位置面板
+        updateLocationPanel();
+        
+        // 更新在线司机数量
+        updateOnlineCount();
+    }
+
+    function handleDriverOnline(data) {
+        const { driverId, name, phone } = data;
+        if (!driverLocations[driverId]) {
+            driverLocations[driverId] = { name: name, phone: phone, lat: null, lng: null, address: '在线，等待位置...', time: '-' };
+        }
+        updateOnlineCount();
+    }
+
+    function handleDriverOffline(data) {
+        const { driverId } = data;
+        removeDriverMarker(driverId);
+        if (driverLocations[driverId]) {
+            driverLocations[driverId].address = '已离线';
+            driverLocations[driverId].time = '离线';
+        }
+        updateLocationPanel();
+        updateOnlineCount();
+    }
+
+    // ============================================================
+    // 地图标记管理
+    // ============================================================
+    function updateDriverMarker(driverId, loc) {
+        if (!loc.lat || !loc.lng) return;
+        
+        const position = [loc.lng, loc.lat]; // 高德地图使用 [lng, lat]
+        
+        // 创建自定义司机标记图标
+        const iconContent = `
+            <div style="
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: #fff;
+                padding: 4px 10px;
+                border-radius: 16px;
+                font-size: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+                box-shadow: 0 2px 8px rgba(102,126,234,0.5);
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            ">
+                🚛 ${loc.name}
+            </div>
+        `;
+        
+        // 更新看板地图
+        if (dashboardMap) {
+            if (driverMarkers[driverId + '_dash']) {
+                driverMarkers[driverId + '_dash'].setPosition(position);
+            } else {
+                driverMarkers[driverId + '_dash'] = new AMap.Marker({
+                    map: dashboardMap,
+                    position: position,
+                    content: iconContent,
+                    offset: new AMap.Pixel(-40, -20),
+                    zIndex: 100
+                });
+            }
+        }
+        
+        // 更新定位页地图
+        if (trackingMap) {
+            if (driverMarkers[driverId + '_track']) {
+                driverMarkers[driverId + '_track'].setPosition(position);
+            } else {
+                driverMarkers[driverId + '_track'] = new AMap.Marker({
+                    map: trackingMap,
+                    position: position,
+                    content: iconContent,
+                    offset: new AMap.Pixel(-40, -20),
+                    zIndex: 100
+                });
+                
+                // 点击标记显示详情
+                driverMarkers[driverId + '_track'].on('click', function() {
+                    showDriverInfoWindow(driverId, loc);
+                });
+            }
+        }
+    }
+
+    function removeDriverMarker(driverId) {
+        if (driverMarkers[driverId + '_dash']) {
+            dashboardMap.remove(driverMarkers[driverId + '_dash']);
+            delete driverMarkers[driverId + '_dash'];
+        }
+        if (driverMarkers[driverId + '_track']) {
+            trackingMap.remove(driverMarkers[driverId + '_track']);
+            delete driverMarkers[driverId + '_track'];
+        }
+    }
+
+    function showDriverInfoWindow(driverId, loc) {
+        if (!trackingMap) return;
+        
+        const content = `
+            <div style="padding:8px;min-width:200px;">
+                <div style="font-weight:600;font-size:14px;margin-bottom:6px;">${loc.name}</div>
+                <div style="font-size:12px;color:#666;margin-bottom:4px;">📍 ${loc.address}</div>
+                <div style="font-size:12px;color:#999;">🕐 ${loc.time}</div>
+                ${loc.speed > 0 ? `<div style="font-size:12px;color:#999;">🚗 速度：${loc.speed.toFixed(1)} km/h</div>` : ''}
+                ${loc.accuracy > 0 ? `<div style="font-size:12px;color:#999;">📡 精度：${loc.accuracy.toFixed(0)}m</div>` : ''}
+            </div>
+        `;
+        
+        const infoWindow = new AMap.InfoWindow({
+            content: content,
+            offset: new AMap.Pixel(0, -30)
+        });
+        
+        infoWindow.open(trackingMap, [loc.lng, loc.lat]);
+    }
+
+    // ============================================================
+    // 逆地理编码（经纬度 -> 地址）
+    // ============================================================
+    function reverseGeocode(lng, lat, callback) {
+        if (!geocoder) {
+            callback('未知位置');
+            return;
+        }
+        geocoder.getAddress([lng, lat], function(status, result) {
+            if (status === 'complete' && result.info === 'OK') {
+                callback(result.regeocode.formattedAddress);
+            } else {
+                callback(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+            }
+        });
+    }
+
+    // ============================================================
+    // UI更新函数
+    // ============================================================
+    function updateDriverRow(driverId, loc) {
+        const statusDot = document.getElementById('driverStatus_' + driverId);
+        const statusText = document.getElementById('driverStatusText_' + driverId);
+        const locEl = document.getElementById('driverLoc_' + driverId);
+        const timeEl = document.getElementById('driverTime_' + driverId);
+        
+        if (statusDot) {
+            statusDot.className = 'status-dot status-online';
+        }
+        if (statusText) {
+            statusText.textContent = '在线';
+        }
+        if (locEl) {
+            locEl.textContent = loc.address || '定位中...';
+            locEl.style.color = '#667eea';
+        }
+        if (timeEl) {
+            timeEl.textContent = loc.time || '-';
+        }
+    }
+
+    function updateLocationPanel() {
+        const html = Object.entries(driverLocations).map(([id, loc]) => {
+            const isOnline = loc.lat && loc.lng;
+            return `
+                <div class="driver-loc-item" onclick="panToDriver('${id}')">
+                    <span class="driver-loc-dot" style="background:${isOnline ? '#52c41a' : '#999'}"></span>
+                    <div>
+                        <div class="driver-loc-name">${loc.name}</div>
+                        <div class="driver-loc-addr">${loc.address || '定位中...'}</div>
+                        <div class="driver-loc-time">${loc.time}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        const list1 = document.getElementById('driverLocList');
+        const list2 = document.getElementById('trackingDriverLocList');
+        if (list1) list1.innerHTML = html || '<div style="color:#999;font-size:12px;">暂无在线司机</div>';
+        if (list2) list2.innerHTML = html || '<div style="color:#999;font-size:12px;">暂无在线司机</div>';
+    }
+
+    function updateOnlineCount() {
+        const online = Object.values(driverLocations).filter(l => l.lat && l.lng).length;
+        document.getElementById('onlineCount').textContent = '在线司机：' + online;
+    }
+
+    function panToDriver(driverId) {
+        const loc = driverLocations[driverId];
+        if (!loc || !loc.lat || !loc.lng) return;
+        
+        if (trackingMap) {
+            trackingMap.setZoomAndCenter(16, [loc.lng, loc.lat]);
+        }
+        if (dashboardMap) {
+            dashboardMap.setZoomAndCenter(16, [loc.lng, loc.lat]);
+        }
+        
+        showDriverInfoWindow(driverId, loc);
+    }
+
+    function fitAllDrivers() {
+        if (!trackingMap) return;
+        const positions = Object.values(driverLocations)
+            .filter(l => l.lat && l.lng)
+            .map(l => [l.lng, l.lat]);
+        
+        if (positions.length > 0) {
+            trackingMap.setFitView(positions.map(p => ({
+                position: p
+            })));
+        }
+    }
+
+    function locateDriver(driverId) {
+        panToDriver(driverId);
+        // 切换到定位页
+        switchPage('tracking', document.querySelector('[onclick*="tracking"]'));
+    }
+
+    function viewTrack(driverId) {
+        alert('轨迹回放功能需要后端存储历史位置数据\n司机ID：' + driverId + '\n\n当前演示模式下暂无轨迹数据');
+    }
+
+    // ============================================================
+    // 演示模式（当WebSocket无法连接时使用）
+    // ============================================================
+    function startDemoMode() {
+        // 模拟深圳地区的司机位置数据
+        const demoDrivers = [
+            { driverId: 'yubaohua', name: '于保华', phone: '18165730627', lat: 22.5431, lng: 114.0579, address: '深圳市福田区华强北路赛格广场附近' },
+        ];
+        
+        // 添加初始位置
+        demoDrivers.forEach(d => {
+            handleLocationUpdate({
+                ...d,
+                accuracy: 15,
+                speed: 0,
+                timestamp: new Date().toLocaleString('zh-CN')
+            });
+        });
+        
+        // 模拟位置移动（每5秒小幅移动）
+        setInterval(() => {
+            Object.keys(driverLocations).forEach(id => {
+                const loc = driverLocations[id];
+                if (loc.lat && loc.lng) {
+                    // 随机小范围移动（模拟真实GPS漂移）
+                    const newLat = loc.lat + (Math.random() - 0.5) * 0.001;
+                    const newLng = loc.lng + (Math.random() - 0.5) * 0.001;
+                    const newSpeed = Math.random() * 40;
+                    
+                    handleLocationUpdate({
+                        driverId: id,
+                        name: loc.name,
+                        phone: loc.phone,
+                        lat: newLat.toFixed(6),
+                        lng: newLng.toFixed(6),
+                        accuracy: 10 + Math.random() * 20,
+                        speed: newSpeed,
+                        address: loc.address,
+                        timestamp: new Date().toLocaleString('zh-CN')
+                    });
+                }
+            });
+        }, 5000);
+    }
+
+    // ============================================================
+    // 页面切换
+    // ============================================================
+    function switchPage(page, el) {
+        document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+        document.getElementById('page-' + page).classList.remove('hidden');
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        if (el) {
+            el.classList.add('active');
+        }
+        
+        // 切换到地图页面时，刷新地图大小
+        setTimeout(() => {
+            if (page === 'dashboard' && dashboardMap) dashboardMap.resize();
+            if (page === 'tracking' && trackingMap) trackingMap.resize();
+        }, 100);
+    }
+
+    function showCreateOrder() {
+        document.getElementById('createOrderModal').classList.add('show');
+    }
+
+    function showAddDriver() {
+        document.getElementById('addDriverModal').classList.add('show');
+        document.getElementById('driverName').value = '';
+        document.getElementById('driverPhone').value = '';
+        document.getElementById('driverPassword').value = '';
+        document.getElementById('driverVehicleNo').value = '';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('show');
+    }
+
+    function createOrder() {
+        alert('订单创建成功！\n\n订单号：YD20260626004\n货物：' + document.getElementById('cargoName').value);
+        closeModal('createOrderModal');
+    }
+
+    async function addDriver() {
+        const name = document.getElementById('driverName').value.trim();
+        const phone = document.getElementById('driverPhone').value.trim();
+        const password = document.getElementById('driverPassword').value.trim();
+        const vehicleNo = document.getElementById('driverVehicleNo').value.trim();
+        
+        if (!name || !phone || !password) {
+            alert('请填写完整信息（姓名、手机号、密码为必填项）');
+            return;
+        }
+        
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+            alert('请输入正确的手机号');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/drivers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, password, vehicleNo })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'ok') {
+                alert('司机账号添加成功！\n\n司机ID：' + data.driverId);
+                closeModal('addDriverModal');
+                loadDriverList();
+            } else {
+                alert('添加失败：' + data.message);
+            }
+        } catch (e) {
+            alert('网络错误，请稍后重试');
+        }
+    }
+
+    async function deleteDriver(driverId) {
+        if (!confirm('确定要删除该司机账号吗？')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/drivers/' + driverId, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'ok') {
+                alert('司机账号删除成功');
+                loadDriverList();
+            } else {
+                alert('删除失败：' + data.message);
+            }
+        } catch (e) {
+            alert('网络错误，请稍后重试');
+        }
+    }
+
+    async function loadDriverList() {
+        try {
+            const response = await fetch('/api/drivers/list');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('driverTableBody');
+            if (!tbody) return;
+            
+            if (!data.drivers || data.drivers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">暂无司机数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.drivers.map(d => `
+                <tr id="driverRow_${d.driverId}">
+                    <td>${d.name}</td>
+                    <td>${d.phone}</td>
+                    <td>
+                        <span class="driver-status">
+                            <span class="status-dot ${d.online ? 'status-online' : 'status-offline'}" id="driverStatus_${d.driverId}"></span>
+                            <span id="driverStatusText_${d.driverId}">${d.online ? '在线' : '离线'}</span>
+                        </span>
+                    </td>
+                    <td>${d.vehicleNo || '-'}</td>
+                    <td id="driverLoc_${d.driverId}">${d.lastLocation ? d.lastLocation.address : '-'}</td>
+                    <td id="driverTime_${d.driverId}">${d.lastUpdate || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="locateDriver('${d.driverId}')">定位</button>
+                        <button class="btn btn-sm" onclick="viewTrack('${d.driverId}')">轨迹</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDriver('${d.driverId}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error('加载司机列表失败:', e);
+        }
+    }
+
+    function doDispatch() {
+        const order = document.getElementById('dispatchOrder').value;
+        const driver = document.getElementById('dispatchDriver').value;
+        if (!order || !driver) {
+            alert('请选择订单和司机');
+            return;
+        }
+        alert('派单成功！\n\n订单：' + order + '\n司机：' + driver + '\n\n司机将收到推送通知');
+        switchPage('orders');
+    }
+
+    function viewOrder(id) {
+        alert('订单详情：' + id);
+    }
+
+    function dispatchOrder(id) {
+        document.getElementById('dispatchOrder').value = id;
+        switchPage('dispatch');
+    }
+
+    function filterOrders(status) {
+        alert('筛选：' + (status === 'all' ? '全部' : status));
+    }
+
+    function logout() {
+        if (confirm('确定要退出登录吗？')) {
+            alert('已退出');
+        }
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', e => {
+            if (e.target === m) m.classList.remove('show');
+        });
+    });
+
+    // ============================================================
+    // 启动
+    // ============================================================
+    window.onload = function() {
+        initMaps();
+        connectWebSocket();
+        loadDriverList();
+    };
+    </script>
+</body>
+</html>
