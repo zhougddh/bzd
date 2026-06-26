@@ -520,6 +520,17 @@
                 <span class="menu-icon">📍</span>
                 <span class="menu-text">车辆定位</span>
             </div>
+            <div class="menu-item" onclick="switchPage('online', this)">
+                <span class="menu-icon">🟢</span>
+                <span class="menu-text">在线人员</span>
+            </div>
+        </div>
+        <div class="menu-group">
+            <div class="menu-title">订单管理</div>
+            <div class="menu-item" onclick="switchPage('orders', this)">
+                <span class="menu-icon">📋</span>
+                <span class="menu-text">订单列表</span>
+            </div>
         </div>
     </div>
     
@@ -792,6 +803,63 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 在线人员 -->
+        <div id="page-online" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🟢 在线人员</span>
+                    <button class="btn btn-sm" onclick="loadOnlineUsers()">🔄 刷新</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>类型</th>
+                                <th>姓名</th>
+                                <th>手机号</th>
+                                <th>车牌号</th>
+                                <th>当前位置</th>
+                                <th>上线时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="onlineTableBody">
+                            <tr><td colspan="6" style="text-align:center;color:#999;">正在加载...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 订单管理 -->
+        <div id="page-orders" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📋 订单列表</span>
+                    <button class="btn btn-primary" onclick="showNewOrderModal()">➕ 新建订单</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>类型</th>
+                                <th>发货地</th>
+                                <th>收货地</th>
+                                <th>货物</th>
+                                <th>司机</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                            <tr><td colspan="9" style="text-align:center;color:#999;">正在加载...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- 新建订单弹窗 -->
@@ -802,52 +870,39 @@
                 <button class="modal-close" onclick="closeModal('createOrderModal')">×</button>
             </div>
             <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>货物名称 *</label>
-                        <input type="text" id="cargoName" placeholder="请输入货物名称">
-                    </div>
-                    <div class="form-group">
-                        <label>重量/体积</label>
-                        <input type="text" id="cargoWeight" placeholder="如：35kg 或 2立方">
-                    </div>
+                <div class="form-group">
+                    <label>订单类型</label>
+                    <select id="orderType" class="form-control">
+                        <option value="delivery">送货</option>
+                        <option value="pickup">取货</option>
+                    </select>
                 </div>
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label>发货地址 *</label>
-                        <input type="text" id="fromAddr" value="深圳市龙岗区吉华街道甘坑同富裕工业区26号">
-                    </div>
+                <div class="form-group">
+                    <label>发货地</label>
+                    <input type="text" id="orderFrom" class="form-control" placeholder="请输入发货地址">
                 </div>
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label>收货地址 *</label>
-                        <input type="text" id="toAddr" placeholder="请输入收货地址">
-                    </div>
+                <div class="form-group">
+                    <label>收货地</label>
+                    <input type="text" id="orderTo" class="form-control" placeholder="请输入收货地址">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>收货人</label>
-                        <input type="text" id="toContact" placeholder="收货人姓名">
-                    </div>
-                    <div class="form-group">
-                        <label>联系电话</label>
-                        <input type="text" id="toPhone" placeholder="收货人电话">
-                    </div>
+                <div class="form-group">
+                    <label>货物信息</label>
+                    <input type="text" id="orderCargo" class="form-control" placeholder="请输入货物名称">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>要求送达时间</label>
-                        <input type="datetime-local" id="deadline">
-                    </div>
-                    <div class="form-group">
-                        <label>备注</label>
-                        <input type="text" id="orderRemark" placeholder="订单备注">
-                    </div>
+                <div class="form-group">
+                    <label>重量</label>
+                    <input type="text" id="orderWeight" class="form-control" placeholder="请输入货物重量">
+                </div>
+                <div class="form-group">
+                    <label>指派司机（可选）</label>
+                    <select id="orderDriver" class="form-control">
+                        <option value="">不指定（待派单）</option>
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn" onclick="closeModal('createOrderModal')">取消</button>
-                <button class="btn btn-primary" onclick="createOrder()">✅ 创建订单</button>
+                <button class="btn btn-primary" onclick="createNewOrder()">创建</button>
             </div>
         </div>
     </div>
@@ -1332,6 +1387,11 @@
             if (page === 'dashboard' && dashboardMap) dashboardMap.resize();
             if (page === 'tracking' && trackingMap) trackingMap.resize();
         }, 100);
+        
+        // 切换页面时刷新数据
+        if (page === 'online') loadOnlineUsers();
+        if (page === 'orders') loadOrders();
+        if (page === 'drivers') loadDriverList();
     }
 
     function showCreateOrder() {
@@ -1452,6 +1512,208 @@
             console.error('加载司机列表失败:', e);
         }
     }
+    
+    // ============================================================
+    // 在线人员
+    // ============================================================
+    async function loadOnlineUsers() {
+        try {
+            const response = await fetch('/api/online');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('onlineTableBody');
+            if (!tbody) return;
+            
+            if (!data.online || data.online.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;">暂无在线人员</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.online.map(u => `
+                <tr>
+                    <td>${u.type === 'driver' ? '🚛 司机' : '💻 管理后台'}</td>
+                    <td>${u.name}</td>
+                    <td>${u.phone || '-'}</td>
+                    <td>${u.vehicleNo || '-'}</td>
+                    <td>${u.lastLocation ? (u.lastLocation.address || '定位中...') : '-'}</td>
+                    <td>${u.onlineAt}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error('加载在线人员失败:', e);
+        }
+    }
+    
+    // ============================================================
+    // 订单管理
+    // ============================================================
+    async function loadOrders() {
+        try {
+            const response = await fetch('/api/orders');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('orderTableBody');
+            if (!tbody) return;
+            
+            if (!data.orders || data.orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;">暂无订单</td></tr>';
+                return;
+            }
+            
+            const statusMap = {
+                'pending': '<span class="tag" style="background:#faad14;color:#fff;">待派单</span>',
+                'assigned': '<span class="tag" style="background:#1890ff;color:#fff;">已派单</span>',
+                'inProgress': '<span class="tag" style="background:#52c41a;color:#fff;">进行中</span>',
+                'completed': '<span class="tag" style="background:#999;color:#fff;">已完成</span>'
+            };
+            
+            tbody.innerHTML = data.orders.map(o => `
+                <tr>
+                    <td>${o.id}</td>
+                    <td>${o.type === 'delivery' ? '送货' : '取货'}</td>
+                    <td>${o.from}</td>
+                    <td>${o.to}</td>
+                    <td>${o.cargo || '-'}</td>
+                    <td>${o.driverName || '-'}</td>
+                    <td>${statusMap[o.status] || o.status}</td>
+                    <td>${o.createdAt}</td>
+                    <td>
+                        ${o.status === 'pending' ? `<button class="btn btn-sm" onclick="dispatchOrderToDriver('${o.id}')">派单</button>` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="deleteOrder('${o.id}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error('加载订单列表失败:', e);
+        }
+    }
+    
+    function showNewOrderModal() {
+        document.getElementById('createOrderModal').classList.add('show');
+        document.getElementById('orderFrom').value = '';
+        document.getElementById('orderTo').value = '';
+        document.getElementById('orderCargo').value = '';
+        document.getElementById('orderWeight').value = '';
+        
+        // 加载在线司机列表
+        loadOnlineDriversForOrder();
+    }
+    
+    async function loadOnlineDriversForOrder() {
+        try {
+            const response = await fetch('/api/drivers/list');
+            const data = await response.json();
+            
+            const select = document.getElementById('orderDriver');
+            const onlineDrivers = data.drivers.filter(d => d.online);
+            
+            select.innerHTML = '<option value="">不指定（待派单）</option>' + 
+                onlineDrivers.map(d => `<option value="${d.driverId}">${d.name} (${d.phone})</option>`).join('');
+        } catch (e) {
+            console.error('加载司机列表失败:', e);
+        }
+    }
+    
+    async function createNewOrder() {
+        const type = document.getElementById('orderType').value;
+        const from = document.getElementById('orderFrom').value.trim();
+        const to = document.getElementById('orderTo').value.trim();
+        const cargo = document.getElementById('orderCargo').value.trim();
+        const weight = document.getElementById('orderWeight').value.trim();
+        const driverSelect = document.getElementById('orderDriver');
+        const driverId = driverSelect.value;
+        const driverName = driverId ? driverSelect.options[driverSelect.selectedIndex].text : '';
+        
+        if (!from || !to) {
+            alert('请填写发货地和收货地');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, from, to, cargo, weight, driverId, driverName })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'ok') {
+                alert('订单创建成功！\n\n订单号：' + data.order.id);
+                closeModal('createOrderModal');
+                loadOrders();
+            } else {
+                alert('创建失败：' + data.message);
+            }
+        } catch (e) {
+            alert('网络错误，请稍后重试');
+        }
+    }
+    
+    async function deleteOrder(orderId) {
+        if (!confirm('确定要删除该订单吗？')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/orders/' + orderId, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'ok') {
+                alert('订单删除成功');
+                loadOrders();
+            } else {
+                alert('删除失败：' + data.message);
+            }
+        } catch (e) {
+            alert('网络错误，请稍后重试');
+        }
+    }
+    
+    async function dispatchOrderToDriver(orderId) {
+        await loadOnlineDriversForOrder();
+        
+        const select = document.getElementById('orderDriver');
+        if (select.options.length <= 1) {
+            alert('暂无可用司机，请先添加在线司机');
+            return;
+        }
+        
+        select.value = '';
+        
+        if (confirm('请在弹窗中选择要派单的司机，然后点击"派单"按钮')) {
+            document.getElementById('createOrderModal').classList.add('show');
+            document.getElementById('orderType').value = 'delivery';
+            document.getElementById('orderFrom').value = '';
+            document.getElementById('orderTo').value = '';
+            document.getElementById('orderCargo').value = '';
+            document.getElementById('orderWeight').value = '';
+        }
+    }
+    
+    async function dispatchSelectedOrder(orderId, driverId, driverName) {
+        try {
+            const response = await fetch('/api/orders/' + orderId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ driverId, driverName, status: 'assigned' })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'ok') {
+                alert('派单成功！\n\n订单：' + orderId + '\n司机：' + driverName);
+                loadOrders();
+            } else {
+                alert('派单失败：' + data.message);
+            }
+        } catch (e) {
+            alert('网络错误，请稍后重试');
+        }
+    }
 
     function doDispatch() {
         const order = document.getElementById('dispatchOrder').value;
@@ -1496,6 +1758,8 @@
         initMaps();
         connectWebSocket();
         loadDriverList();
+        loadOnlineUsers();
+        loadOrders();
     };
     </script>
 </body>

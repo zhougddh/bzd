@@ -30,6 +30,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const clients = new Map();     // WebSocket客户端连接 {wsId: {type, ws}}
 const drivers = new Map();     // 在线司机 {driverId: {name, phone, password, lastLocation, wsId}}
 const driverAccounts = new Map(); // 司机账号列表 {driverId: {name, phone, password, vehicleNo}}
+const orders = new Map();        // 订单列表 {orderId: {id, type, from, to, driverId, driverName, status, createdAt, completedAt}}
 let wsIdCounter = 0;            // WebSocket连接ID计数器
 
 // 初始化默认司机账号
@@ -94,6 +95,35 @@ const server = http.createServer((req, res) => {
     if (url.pathname === '/api/drivers/list') {
         handleGetDriverList(req, res);
         return;
+    }
+    
+    // 在线人员查询
+    if (url.pathname === '/api/online') {
+        handleGetOnlineUsers(req, res);
+        return;
+    }
+    
+    // 订单API
+    if (url.pathname === '/api/orders') {
+        if (req.method === 'GET') {
+            handleGetOrders(req, res);
+        } else if (req.method === 'POST') {
+            handleCreateOrder(req, res);
+        }
+        return;
+    }
+    
+    if (url.pathname.startsWith('/api/orders/')) {
+        const parts = url.pathname.split('/');
+        const orderId = parts[3];
+        if (req.method === 'DELETE') {
+            handleDeleteOrder(req, res, orderId);
+            return;
+        }
+        if (req.method === 'PUT') {
+            handleUpdateOrder(req, res, orderId);
+            return;
+        }
     }
     
     if (url.pathname === '/api/health') {
@@ -362,6 +392,193 @@ function handleGetDriverList(req, res) {
     
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end(JSON.stringify({drivers: driverList}));
+}
+
+// ============================================================
+// HTTP API - 获取在线人员
+// ============================================================
+function handleGetOnlineUsers(req, res) {
+    const onlineUsers = [];
+    
+    // 在线司机
+    drivers.forEach((info, id) => {
+        if (info.wsId !== undefined) {
+            onlineUsers.push({
+                type: 'driver',
+                id: id,
+                name: info.name,
+                phone: info.phone,
+                vehicleNo: driverAccounts.get(id)?.vehicleNo || '',
+                lastLocation: info.lastLocation,
+                onlineAt: new Date(info.lastUpdate || Date.now()).toLocaleString('zh-CN')
+            });
+        }
+    });
+    
+    // 在线管理后台
+    clients.forEach((client, wsId) => {
+        if (client.type === 'admin') {
+            onlineUsers.push({
+                type: 'admin',
+                id: wsId,
+                name: '管理后台',
+                onlineAt: new Date().toLocaleString('zh-CN')
+            });
+        }
+    });
+    
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({online: onlineUsers, count: onlineUsers.length}));
+}
+
+// ============================================================
+// HTTP API - 获取订单列表
+// ============================================================
+function handleGetOrders(req, res) {
+    const orderList = [];
+    orders.forEach((order, id) => {
+        orderList.push(order);
+    });
+    
+    // 按创建时间倒序
+    orderList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({orders: orderList}));
+}
+
+// ============================================================
+// HTTP API - 创建订单
+// ============================================================
+function handleCreateOrder(req, res) {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+        try {
+            const data = JSON.parse(body);
+            
+            if (!data.type || !data.from || !data.to) {
+                res.writeHead(400, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({status: 'error', message: '缺少必填字段（类型、发货地、收货地）'}));
+                return;
+            }
+            
+            const orderId = 'ORD' + Date.now();
+            const order = {
+                id: orderId,
+                type: data.type,           // 'delivery' 送货, 'pickup' 取货
+                from: data.from,           // 发货地
+                to: data.to,               // 收货地
+                cargo: data.cargo || '',   // 货物信息
+                weight: data.weight || '', // 重量
+                driverId: data.driverId || '',
+                driverName: data.driverName || '',
+                status: data.driverId ? 'assigned' : 'pending', // pending待派单, assigned已派单, inProgress进行中, completed已完成
+                createdAt: new Date().toLocaleString('zh-CN'),
+                completedAt: ''
+            };
+            
+            orders.set(orderId, order);
+            console.log(`[API] 创建订单: ${orderId} - ${data.type} - ${data.from} → ${data.to}`);
+            
+            // 广播给所有管理后台
+            broadcastToAdmins({
+                type: 'order_created',
+                order: order
+            });
+            
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({status: 'ok', message: '订单创建成功', order: order}));
+        } catch(e) {
+            res.writeHead(400, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({status: 'error', message: '无效的数据格式'}));
+        }
+    });
+}
+
+// ============================================================
+// HTTP API - 删除订单
+// ============================================================
+function handleDeleteOrder(req, res, orderId) {
+    if (!orderId) {
+        res.writeHead(400, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({status: 'error', message: '订单ID不能为空'}));
+        return;
+    }
+    
+    if (!orders.has(orderId)) {
+        res.writeHead(404, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({status: 'error', message: '订单不存在'}));
+        return;
+    }
+    
+    const order = orders.get(orderId);
+    orders.delete(orderId);
+    
+    console.log(`[API] 删除订单: ${orderId}`);
+    
+    // 广播给所有管理后台
+    broadcastToAdmins({
+        type: 'order_deleted',
+        orderId: orderId
+    });
+    
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({status: 'ok', message: '订单删除成功'}));
+}
+
+// ============================================================
+// HTTP API - 更新订单状态
+// ============================================================
+function handleUpdateOrder(req, res, orderId) {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+        try {
+            if (!orders.has(orderId)) {
+                res.writeHead(404, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({status: 'error', message: '订单不存在'}));
+                return;
+            }
+            
+            const data = JSON.parse(body);
+            const order = orders.get(orderId);
+            
+            if (data.driverId !== undefined) order.driverId = data.driverId;
+            if (data.driverName !== undefined) order.driverName = data.driverName;
+            if (data.status !== undefined) {
+                order.status = data.status;
+                if (data.status === 'completed') {
+                    order.completedAt = new Date().toLocaleString('zh-CN');
+                }
+            }
+            
+            orders.set(orderId, order);
+            
+            // 广播更新
+            broadcastToAdmins({
+                type: 'order_updated',
+                order: order
+            });
+            
+            // 如果是派单，通知指定司机
+            if (data.driverId && drivers.has(data.driverId)) {
+                const driverInfo = drivers.get(data.driverId);
+                if (driverInfo.wsId) {
+                    sendToClient(driverInfo.wsId, {
+                        type: 'order_assigned',
+                        order: order
+                    });
+                }
+            }
+            
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({status: 'ok', message: '订单更新成功', order: order}));
+        } catch(e) {
+            res.writeHead(400, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({status: 'error', message: '无效的数据格式'}));
+        }
+    });
 }
 
 // ============================================================
